@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Search</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">Job Search</div>
+  <nav>
+    <button data-tab="jobs" class="active">Jobs</button>
+    <button data-tab="search">Find jobs</button>
+    <button data-tab="profile">Profile</button>
+  </nav>
+</header>
+
+<div id="banner" class="banner" hidden></div>
+
+<main>
+  <!-- Jobs / tracker -->
+  <section id="tab-jobs" class="tab">
+    <div class="toolbar">
+      <div id="status-filter" class="chips"></div>
+      <button class="primary" id="add-job-btn">+ Add job</button>
+    </div>
+    <div id="stats" class="stats"></div>
+    <div id="job-list" class="job-list"></div>
+  </section>
+
+  <!-- Search -->
+  <section id="tab-search" class="tab" hidden>
+    <form id="search-form" class="card form-grid">
+      <label>Keywords<input name="query" required placeholder="e.g. product manager"></label>
+      <label>Location<input name="location" placeholder="e.g. London, United Kingdom or Remote"></label>
+      <label>Posted within
+        <select name="jobage">
+          <option value="0">Any time</option><option value="1">1 day</option>
+          <option value="7" selected>7 days</option><option value="14">14 days</option><option value="30">30 days</option>
+        </select>
+      </label>
+      <fieldset><legend>Job boards</legend><div id="portal-list" class="portal-list"></div></fieldset>
+      <div class="actions"><button class="primary" type="submit">Search</button></div>
+    </form>
+    <div id="search-result" class="muted"></div>
+  </section>
+
+  <!-- Profile -->
+  <section id="tab-profile" class="tab" hidden>
+    <div class="card">
+      <h2>Import from your CV</h2>
+      <p class="muted">Upload a PDF or paste your CV or LinkedIn profile text. Claude fills in the form below, and you review it before saving.</p>
+      <form id="import-form" class="stack">
+        <input type="file" name="file" accept=".pdf,.txt,.md">
+        <textarea name="text" rows="5" placeholder="...or paste CV text here"></textarea>
+        <div class="actions"><button class="primary" type="submit">Import</button></div>
+      </form>
+    </div>
+    <form id="profile-form" class="card stack"></form>
+  </section>
+</main>
+
+<!-- Job detail panel -->
+<aside id="detail" class="detail" hidden>
+  <div class="detail-inner">
+    <button class="close" id="detail-close" aria-label="Close">&times;</button>
+    <div id="detail-body"></div>
+  </div>
+</aside>
+
+<!-- Add job dialog -->
+<dialog id="add-dialog">
+  <form id="add-form" method="dialog" class="stack">
+    <h2>Add a job</h2>
+    <label>Job URL<input name="url" placeholder="https://..."></label>
+    <label>Or paste the posting text<textarea name="text" rows="8"></textarea></label>
+    <div class="form-row">
+      <label>Title<input name="title"></label>
+      <label>Company<input name="company"></label>
+    </div>
+    <label>Location<input name="location"></label>
+    <div class="actions">
+      <button type="button" id="add-cancel">Cancel</button>
+      <button class="primary" type="submit">Add</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" hidden></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

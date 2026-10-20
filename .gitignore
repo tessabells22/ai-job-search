@@ -119,3 +119,6 @@ company_research/*.json
 
 # Brainstorm mockups (superpowers visual companion) - never ship
 .superpowers/
+
+# Job Search app data: profile, job database, generated documents (never commit)
+/data/

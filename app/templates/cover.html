@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cover letter - {{ p.name }} - {{ job.company }}</title>
+<style>
+  @page { size: A4; margin: 20mm 22mm; }
+  body { font: 11pt/1.5 Georgia, "Times New Roman", serif; color: #1d2430; margin: 0; background: #fff; }
+  .page { max-width: 166mm; margin: 0 auto; padding: 16mm 0; }
+  @media print { .page { padding: 0; } .noprint { display: none; } }
+  .sender { font-family: "Helvetica Neue", Arial, sans-serif; border-bottom: 2px solid #2f5d8a; padding-bottom: 8px; margin-bottom: 18px; }
+  .sender h1 { font-size: 18pt; margin: 0; font-weight: 600; }
+  .sender div { font-size: 9.5pt; color: #4a5566; margin-top: 4px; }
+  .meta { margin-bottom: 16px; font-size: 10.5pt; }
+  p { margin: 0 0 10px; }
+  .sign { margin-top: 18px; }
+  .print-btn { position: fixed; top: 12px; right: 12px; padding: 8px 14px; border: 0; border-radius: 6px;
+               background: #2f5d8a; color: #fff; font: 600 13px system-ui, sans-serif; cursor: pointer; }
+</style>
+</head>
+<body>
+<button class="print-btn noprint" onclick="window.print()">Print / Save as PDF</button>
+<div class="page">
+  <div class="sender">
+    <h1>{{ p.name }}</h1>
+    <div>{{ [p.location, p.email, p.phone] | select | join("  |  ") }}</div>
+  </div>
+  <div class="meta">
+    {{ today }}<br>
+    {% if job.company %}{{ job.company }}<br>{% endif %}
+    Re: {{ job.title }}
+  </div>
+  <p>Dear {{ letter.recipient or "Hiring Manager" }},</p>
+  {% for para in letter.paragraphs %}<p>{{ para }}</p>{% endfor %}
+  <div class="sign">{{ letter.closing or "Kind regards" }},<br><br>{{ p.name }}</div>
+</div>
+</body>
+</html>

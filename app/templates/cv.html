@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CV - {{ p.name }}</title>
+<style>
+  @page { size: A4; margin: 16mm 16mm 14mm; }
+  * { box-sizing: border-box; }
+  body { font: 10.5pt/1.4 "Helvetica Neue", Arial, sans-serif; color: #1d2430; margin: 0; background: #fff; }
+  .page { max-width: 178mm; margin: 0 auto; padding: 12mm 0; }
+  @media print { .page { padding: 0; } .noprint { display: none; } }
+  header { border-bottom: 2px solid #2f5d8a; padding-bottom: 8px; margin-bottom: 10px; }
+  h1 { font-size: 22pt; margin: 0; font-weight: 600; letter-spacing: .2px; }
+  .headline { font-size: 11.5pt; color: #2f5d8a; margin-top: 2px; }
+  .contact { font-size: 9.5pt; color: #4a5566; margin-top: 6px; }
+  .contact span + span::before { content: "  |  "; color: #9aa4b2; }
+  h2 { font-size: 10pt; text-transform: uppercase; letter-spacing: 1.2px; color: #2f5d8a;
+       margin: 14px 0 6px; border-bottom: 1px solid #d6dde6; padding-bottom: 2px; }
+  p { margin: 0 0 6px; }
+  .entry { margin-bottom: 9px; break-inside: avoid; }
+  .row { display: flex; justify-content: space-between; gap: 12px; }
+  .role { font-weight: 600; }
+  .org { color: #4a5566; }
+  .dates { color: #4a5566; white-space: nowrap; font-size: 9.5pt; }
+  ul { margin: 3px 0 0; padding-left: 16px; }
+  li { margin-bottom: 2px; }
+  .skills div { margin-bottom: 3px; }
+  .skills b { font-weight: 600; }
+  .print-btn { position: fixed; top: 12px; right: 12px; padding: 8px 14px; border: 0; border-radius: 6px;
+               background: #2f5d8a; color: #fff; font: 600 13px system-ui, sans-serif; cursor: pointer; }
+</style>
+</head>
+<body>
+<button class="print-btn noprint" onclick="window.print()">Print / Save as PDF</button>
+<div class="page">
+  <header>
+    <h1>{{ p.name }}</h1>
+    <div class="headline">{{ cv.headline }}</div>
+    <div class="contact">
+      {% if p.location %}<span>{{ p.location }}</span>{% endif %}
+      {% if p.email %}<span>{{ p.email }}</span>{% endif %}
+      {% if p.phone %}<span>{{ p.phone }}</span>{% endif %}
+      {% if p.linkedin %}<span>{{ p.linkedin }}</span>{% endif %}
+    </div>
+  </header>
+
+  <h2>Profile</h2>
+  <p>{{ cv.summary }}</p>
+
+  <h2>Skills</h2>
+  <div class="skills">
+    {% for g in cv.skill_groups %}<div><b>{{ g.name }}:</b> {{ g["items"] | join(", ") }}</div>{% endfor %}
+  </div>
+
+  <h2>Experience</h2>
+  {% for e in experience %}
+  <div class="entry">
+    <div class="row">
+      <div><span class="role">{{ e.title }}</span>, <span class="org">{{ e.company }}{% if e.location %}, {{ e.location }}{% endif %}</span></div>
+      <div class="dates">{{ e.start }}{% if e.end %} - {{ e.end }}{% endif %}</div>
+    </div>
+    <ul>{% for b in e.bullets %}<li>{{ b }}</li>{% endfor %}</ul>
+  </div>
+  {% endfor %}
+
+  {% if p.education %}
+  <h2>Education</h2>
+  {% for ed in p.education %}
+  <div class="entry">
+    <div class="row">
+      <div><span class="role">{{ ed.degree }}</span>, <span class="org">{{ ed.institution }}</span></div>
+      <div class="dates">{{ ed.start }}{% if ed.end %} - {{ ed.end }}{% endif %}</div>
+    </div>
+    {% if ed.details %}<p>{{ ed.details }}</p>{% endif %}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  {% if p.certifications %}
+  <h2>Certifications</h2>
+  <ul>{% for c in p.certifications %}<li>{{ c }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  {% if p.languages %}
+  <h2>Languages</h2>
+  <p>{% for l in p.languages %}{{ l.language }} ({{ l.level }}){% if not loop.last %}, {% endif %}{% endfor %}</p>
+  {% endif %}
+</div>
+</body>
+</html>

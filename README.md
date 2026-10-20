@@ -37,6 +37,10 @@ Sixty-nine tailored applications, twenty first interviews, and one signed contra
   </a>
 </p>
 
+## Job Search app (no Claude Code needed)
+
+This copy also includes a local web app with job search, fit scoring, tailored CV and cover letter, and an application tracker. It calls the Claude API directly. See [`app/README.md`](app/README.md) to set it up and run it.
+
 ## What this is
 
 A structured workflow that turns Claude Code into a full-stack job application assistant. The core workflow (self-profiling, fit evaluation, and the drafter-reviewer application pipeline) is **language- and country-agnostic**. The job portal search skills are built for the Danish market (Jobindex, Jobnet, Akademikernes Jobbank, etc.), but the pattern is designed to be swapped for your local job boards.
