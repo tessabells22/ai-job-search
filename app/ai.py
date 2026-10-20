@@ -28,12 +28,16 @@ class AIError(Exception):
 
 
 def _client() -> anthropic.Anthropic:
-    return anthropic.Anthropic()
+    try:
+        return anthropic.Anthropic()
+    except anthropic.AnthropicError:
+        raise AIError("No Anthropic API key found. Set ANTHROPIC_API_KEY in the terminal, then restart the app.")
 
 
 def _call(system: str, content, output: Type[T], effort: str = "medium") -> T:
+    client = _client()
     try:
-        response = _client().beta.messages.parse(
+        response = client.beta.messages.parse(
             model=config.MODEL,
             max_tokens=16000,
             system=system,
@@ -43,8 +47,13 @@ def _call(system: str, content, output: Type[T], effort: str = "medium") -> T:
             betas=["server-side-fallback-2026-07-01"],
             fallbacks="default",
         )
+    except TypeError as e:
+        if "authentication" not in str(e):
+            raise
+        raise AIError("No Anthropic API key found. Set ANTHROPIC_API_KEY in the terminal, then restart the app.")
     except anthropic.AuthenticationError:
-        raise AIError("Invalid or missing Anthropic API key. Set ANTHROPIC_API_KEY and restart the app.")
+        raise AIError("Anthropic rejected the API key. Check it was copied in full, or create a new one "
+                      "at console.anthropic.com, then restart the app.")
     except anthropic.RateLimitError:
         raise AIError("Rate limited by the Anthropic API. Wait a minute and try again.")
     except anthropic.APIStatusError as e:
