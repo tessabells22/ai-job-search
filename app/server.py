@@ -1,6 +1,5 @@
 """FastAPI server: JSON API under /api, the single-page UI under /, documents under /jobs/{id}/."""
 
-import shutil
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
@@ -72,7 +71,7 @@ def status():
     import os
     return {
         "api_key_set": bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")),
-        "bun_installed": bool(shutil.which("bun")),
+        "bun_installed": bool(sources.find_bun()),
         "profile_ready": not store.load_profile().is_empty(),
         "model": config.MODEL,
     }

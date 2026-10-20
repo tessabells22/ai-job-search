@@ -55,8 +55,21 @@ def list_portals() -> list:
     return portals
 
 
+def find_bun():
+    """Bun on PATH, or where its installer puts it (a terminal opened before the
+    install doesn't have ~/.bun/bin on PATH yet)."""
+    found = shutil.which("bun")
+    if found:
+        return found
+    for name in ("bun", "bun.exe"):
+        candidate = Path.home() / ".bun" / "bin" / name
+        if candidate.is_file():
+            return str(candidate)
+    return None
+
+
 def _bun() -> str:
-    bun = shutil.which("bun")
+    bun = find_bun()
     if not bun:
         raise SourceError("Bun is not installed. Install it from https://bun.sh to search job portals.")
     return bun
