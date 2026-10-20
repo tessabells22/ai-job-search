@@ -169,6 +169,42 @@ class AppTest(unittest.TestCase):
         self.assertIn("Test Person", cover)
 
 
+@unittest.skipUnless(HAVE_DEPS, "app dependencies not installed")
+class OutputSchemaTest(unittest.TestCase):
+    """Structured outputs reject a request with more than 24 optional properties
+    or 16 union-typed ones ("Schema is too complex")."""
+
+    def _walk(self, node, objects):
+        if isinstance(node, dict):
+            if "properties" in node:
+                objects.append(node)
+            for v in node.values():
+                self._walk(v, objects)
+        elif isinstance(node, list):
+            for v in node:
+                self._walk(v, objects)
+        return objects
+
+    def test_schemas_have_no_optional_or_union_properties(self):
+        from app.ai import output_schema
+        from app.models import FitAssessment, Profile, TailoredDocuments
+        for model in (Profile, FitAssessment, TailoredDocuments):
+            schema = output_schema(model)
+            for obj in self._walk(schema, []):
+                self.assertEqual(sorted(obj["required"]), sorted(obj["properties"]), model.__name__)
+                self.assertIs(obj["additionalProperties"], False)
+                for prop in obj["properties"].values():
+                    self.assertNotIn("anyOf", prop, model.__name__)
+                    self.assertNotIn("default", prop, model.__name__)
+
+    def test_property_named_title_survives(self):
+        from app.ai import output_schema
+        from app.models import Profile
+        exp = output_schema(Profile)["$defs"]["Experience"]
+        self.assertIn("title", exp["properties"])
+        self.assertIn("title", exp["required"])
+
+
 class SourcesTest(unittest.TestCase):
     @unittest.skipUnless(HAVE_DEPS, "app dependencies not installed")
     def test_lists_shipped_portals_with_enabled_flag(self):

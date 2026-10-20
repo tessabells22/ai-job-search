@@ -34,16 +34,41 @@ def _client() -> anthropic.Anthropic:
         raise AIError("No Anthropic API key found. Set ANTHROPIC_API_KEY in the terminal, then restart the app.")
 
 
+def output_schema(model: Type[BaseModel]) -> dict:
+    """The model's JSON schema with every property required and no defaults.
+
+    Structured outputs allow at most 24 optional properties per request, and
+    Profile alone has more. Requiring everything keeps every schema under that
+    limit; the prompts tell Claude to send an empty string or list for anything
+    the source doesn't state.
+    """
+    def strict(node):
+        if isinstance(node, dict):
+            node.pop("default", None)
+            if isinstance(node.get("title"), str):  # schema label, not a property named "title"
+                node.pop("title")
+            if "properties" in node:
+                node["required"] = list(node["properties"])
+                node["additionalProperties"] = False
+            for value in node.values():
+                strict(value)
+        elif isinstance(node, list):
+            for value in node:
+                strict(value)
+        return node
+    return strict(model.model_json_schema())
+
+
 def _call(system: str, content, output: Type[T], effort: str = "medium") -> T:
     client = _client()
     try:
-        response = client.beta.messages.parse(
+        response = client.beta.messages.create(
             model=config.MODEL,
             max_tokens=16000,
             system=system,
             messages=[{"role": "user", "content": content}],
-            output_format=output,
-            output_config={"effort": effort},
+            output_config={"effort": effort,
+                           "format": {"type": "json_schema", "schema": output_schema(output)}},
             betas=["server-side-fallback-2026-07-01"],
             fallbacks="default",
         )
@@ -65,16 +90,18 @@ def _call(system: str, content, output: Type[T], effort: str = "medium") -> T:
         raise AIError("The model declined this request.")
     if response.stop_reason == "max_tokens":
         raise AIError("The response was cut off. Try a shorter posting or CV.")
-    if response.parsed_output is None:
+    text = "".join(b.text for b in response.content if b.type == "text")
+    try:
+        return output.model_validate_json(text)
+    except ValueError:
         raise AIError("The model returned output that did not match the expected format.")
-    return response.parsed_output
 
 
 def import_profile(cv_text: str = "", pdf_bytes: Optional[bytes] = None) -> Profile:
     system = (
         "You extract a candidate profile from their CV or LinkedIn export. Copy facts exactly: "
-        "names, job titles, companies, dates, degrees. Never invent anything. Leave a field empty "
-        "when the document does not state it. Dates as written (e.g. 'Jan 2021', '2019'); use "
+        "names, job titles, companies, dates, degrees. Never invent anything. Use an empty string "
+        "or empty list for anything the document does not state. Dates as written (e.g. 'Jan 2021', '2019'); use "
         "'Present' for a current role. Put each job's responsibilities and achievements in its "
         "bullets, most impressive first."
     )
