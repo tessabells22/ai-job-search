@@ -1,5 +1,6 @@
 """FastAPI server: JSON API under /api, the single-page UI under /, documents under /jobs/{id}/."""
 
+import logging
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
@@ -13,6 +14,7 @@ from .models import JobIn, JobUpdate, Profile, overall_score, verdict_for
 STATIC = config.REPO_ROOT / "app" / "static"
 ALLOWED_HOSTS = {"127.0.0.1", "localhost"}
 
+log = logging.getLogger("jobsearch")
 app = FastAPI(title="Job Search", docs_url=None, redoc_url=None)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
@@ -32,6 +34,13 @@ async def local_only(request: Request, call_next):
 @app.exception_handler(ai.AIError)
 async def ai_error(_, exc):
     return JSONResponse({"detail": str(exc)}, status_code=502)
+
+
+@app.exception_handler(Exception)
+async def unexpected_error(_, exc):
+    # Show the real cause in the browser instead of a bare "500"; full traceback in the terminal.
+    log.exception("Unhandled error")
+    return JSONResponse({"detail": f"Unexpected error: {type(exc).__name__}: {exc}"}, status_code=500)
 
 
 @app.exception_handler(sources.SourceError)
@@ -130,6 +139,10 @@ def search(req: SearchRequest, conn=Depends(db)):
             jobs = sources.search(portal, req.query, req.location, req.jobage, req.limit)
         except sources.SourceError as e:
             errors.append(str(e))
+            continue
+        except Exception as e:  # one broken portal must not sink the others
+            log.exception("Search failed on %s", portal)
+            errors.append(f"{portal}: {type(e).__name__}: {e}")
             continue
         for job in jobs:
             job_id, created = store.upsert_job(conn, job)

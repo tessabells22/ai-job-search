@@ -106,7 +106,11 @@ def search(portal: str, query: str, location: str = "", jobage: int = 0, limit: 
         args += ["--jobage", str(jobage)]
     if limit:
         args += ["--limit", str(limit)]
-    payload = json.loads(_run_cli(portal, args))
+    out = _run_cli(portal, args)
+    try:
+        payload = json.loads(out[out.index("{"):] if "{" in out else out)
+    except ValueError:
+        raise SourceError(f"{portal} returned unreadable output: {out.strip()[:200]}")
     jobs = []
     for r in payload.get("results", []):
         jobs.append(JobIn(

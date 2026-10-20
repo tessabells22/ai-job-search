@@ -111,6 +111,19 @@ class AppTest(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json()["errors"], ["linkedin-search: 403"])
 
+    def test_unexpected_portal_error_is_reported_not_500(self):
+        with mock.patch("app.sources.search", side_effect=ValueError("bad date")):
+            r = self.client.post("/api/search", json={"portals": ["freehire-search"], "query": "x"}, headers=HEADERS)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json()["errors"], ["freehire-search: ValueError: bad date"])
+
+    def test_cli_output_with_leading_noise_still_parses(self):
+        out = 'warn: something\n{"meta": {}, "results": [{"id": "9", "title": "T", "url": "u"}]}'
+        with mock.patch("app.sources._run_cli", return_value=out):
+            from app import sources
+            jobs = sources.search("freehire-search", "x")
+        self.assertEqual(jobs[0].external_id, "9")
+
     # --- fit evaluation ---
 
     def test_evaluate_needs_a_profile(self):
